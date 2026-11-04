@@ -2,3 +2,6 @@
 
 /* Programa automático y regla de dirección por nivel. */
 #sheet{min-width:1900px}#sheet th:first-child{width:215px}#sheet th:nth-child(2){width:225px}#sheet th:nth-child(3){width:85px}#sheet th:nth-child(4){width:240px}#sheet th:nth-child(5){width:100px}#sheet th:nth-child(6){width:100px}#sheet th:nth-child(n+7){width:150px}#sheet .program-readonly{background:#f1f4ec;color:#72816b;border-color:transparent;font-size:11px;cursor:default}.thesis-policy{padding:13px 26px;font-size:12px;line-height:1.6;color:#536f41;background:#eef4e6;border-top:1px solid #e1e8d6;border-bottom:1px solid #e1e8d6}
+
+/* Comparación explícita de horas decimales y superiores. */
+#sheet{min-width:2050px}.summary-wrap table{min-width:1150px}.rounding-note{padding:15px 26px;margin:0;background:#f2f5eb;color:#738369;font-size:11px;border-top:1px solid #e1e8d6;line-height:1.8}
