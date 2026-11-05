@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concilia · Nómina de facultad</title>
+<link rel="stylesheet" href="../style.css?v=20261104-3">
+<style>
+.workspace-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:20px 26px}.workspace-controls label{display:flex;gap:8px;align-items:center}.workspace-controls input[type=checkbox]{width:auto}.workspace-controls select{max-width:100%}.import-note{margin:0;padding:0 26px 18px}.faculty-status{margin:12px 0;white-space:pre-line}.faculty-table{min-width:880px}.faculty-exports{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}.faculty-note{margin:12px 26px}.faculty-empty{padding:24px;color:#627664}.faculty-detail{margin:18px 26px}.faculty-detail summary{cursor:pointer}.faculty-detail .summary-wrap{margin-top:12px}.faculty-table td{vertical-align:top}
+</style>
+</head>
+<body>
+<header><span class="brand">◈ <span>concilia<small>NÓMINA DE FACULTAD</small></span></span><div class="header-right"><button id="backup">Descargar copia de facultad</button></div></header>
+<main>
+<div class="intro"><div><span class="eyebrow">CONSOLIDACIÓN DE NÓMINA · POSGRADOS</span><h1>Registro de la facultad</h1><p>Carga los registros de los directores y consolida las horas de cada profesor por periodo.</p></div></div>
+<section class="panel">
+<div class="section-label"><b>01</b><div><h2>Cargar registros</h2><p>Selecciona varios archivos en una sola carga.</p></div></div>
+<div class="workspace-controls"><input id="files" type="file" multiple accept=".json,.csv" aria-label="Archivos de los programas"><button class="primary" id="import">Cargar archivos</button><label><input type="checkbox" id="replace"> Reemplazar el mismo ID, programa y periodo</label></div>
+<p class="import-note">Usa la copia editable JSON o el CSV de <b>Descargar registro</b> de cada director. La copia de facultad también se abre aquí. Los archivos se procesan y guardan en este navegador.</p>
+</section>
+<p id="status" class="faculty-status" role="status"></p>
+<div class="workspace-controls"><label>Periodo <select id="period"></select></label></div>
+<div class="stats" id="stats"></div>
+<section class="panel">
+<div class="section-label"><b>02</b><div><h2>Registros por programa</h2><p>Revisa el origen de la carga y las filas pendientes.</p></div><div class="faculty-exports"><button id="detail-csv">Descargar detalle CSV</button></div></div>
+<div class="summary-wrap"><table class="faculty-table"><thead><tr><th>Programa</th><th>Director</th><th>Registro</th><th>Filas válidas / totales</th><th>Decimal h/semana</th><th>Superior h/semana</th><th>Acción</th></tr></thead><tbody id="records"></tbody></table></div>
+<div id="detail"></div>
+</section>
+<section class="panel">
+<div class="section-label"><b>03</b><div><h2>Consolidado por profesor</h2><p>Suma las horas en todos los programas del periodo seleccionado.</p></div><div class="faculty-exports"><button class="primary" id="summary-csv">Descargar consolidado CSV</button></div></div>
+<p class="faculty-note">Se agrupan nombres que difieren en mayúsculas, tildes o espacios. Revisa homónimos y variantes de escritura antes de conciliar la nómina.</p>
+<div class="summary-wrap"><table class="faculty-table"><thead><tr><th>Profesor</th><th>Programas</th><th>Decimal h/semana</th><th>Superior h/semana</th><th>Decimal h/semestre</th><th>Superior h/semestre</th><th>Control de 40 h/semana</th></tr></thead><tbody id="summary"></tbody></table></div>
+</section>
+<footer><span>Concilia · Posgrados</span><span>20 semanas por semestre · Superior por fila</span></footer>
+</main>
+<script src="../catalog.js?v=20261104-3"></script>
+<script src="../thesis-rules.js?v=20261104-3"></script>
+<script src="../model.js?v=20261104-3"></script>
+<script src="faculty.js"></script>
+</body>
+</html>
