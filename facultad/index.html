@@ -8,6 +8,9 @@
 <style>
 .workspace-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:20px 26px}.workspace-controls label{display:flex;gap:8px;align-items:center}.workspace-controls input[type=checkbox]{width:auto}.workspace-controls select{max-width:100%}.import-note{margin:0;padding:0 26px 18px}.faculty-status{margin:12px 0;white-space:pre-line}.faculty-table{min-width:880px}.faculty-exports{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto}.faculty-note{margin:12px 26px}.faculty-empty{padding:24px;color:#627664}.faculty-detail{margin:18px 26px}.faculty-detail summary{cursor:pointer}.faculty-detail .summary-wrap{margin-top:12px}.faculty-table td{vertical-align:top}
 </style>
+<style>
+.entry-dialog{width:min(720px,calc(100% - 28px));max-height:90vh;overflow:auto;border:1px solid #dbe5db;border-radius:16px;padding:24px;color:#183d2e}.entry-dialog::backdrop{background:#183d2e66}.entry-dialog h2{margin:0 0 16px}.entry-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;border:0;padding:0;margin:12px 0}.entry-dialog label{display:grid;gap:4px;font-size:13px}.entry-dialog input,.entry-dialog select{min-width:0;width:100%;box-sizing:border-box}.entry-dialog [hidden]{display:none}.entry-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}.entry-result{margin:12px 0;color:#4b6656}.entry-error{color:#a12e22}@media(max-width:520px){.entry-fields{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
 <header><span class="brand">◈ <span>concilia<small>NÓMINA DE FACULTAD</small></span></span><div class="header-right"><button id="backup">Descargar copia de facultad</button></div></header>
@@ -22,7 +25,7 @@
 <div class="workspace-controls"><label>Periodo <select id="period"></select></label></div>
 <div class="stats" id="stats"></div>
 <section class="panel">
-<div class="section-label"><b>02</b><div><h2>Registros por programa</h2><p>Revisa el origen de la carga y las filas pendientes.</p></div><div class="faculty-exports"><button id="detail-csv">Descargar detalle CSV</button></div></div>
+<div class="section-label"><b>02</b><div><h2>Registros por programa</h2><p>Agrega filas y revisa el origen de la carga.</p></div><div class="faculty-exports"><button class="primary" id="add-row">＋ Agregar fila</button><button id="detail-csv">Descargar detalle CSV</button></div></div>
 <div class="summary-wrap"><table class="faculty-table"><thead><tr><th>Programa</th><th>Director</th><th>Registro</th><th>Filas válidas / totales</th><th>Decimal h/semana</th><th>Superior h/semana</th><th>Acción</th></tr></thead><tbody id="records"></tbody></table></div>
 <div id="detail"></div>
 </section>
@@ -33,9 +36,32 @@
 </section>
 <footer><span>Concilia · Posgrados</span><span>20 semanas por semestre · Superior por fila</span></footer>
 </main>
+<dialog id="entry-dialog" class="entry-dialog" aria-labelledby="entry-title">
+<h2 id="entry-title">Agregar fila</h2>
+<form id="entry-form">
+<label>Registro de destino <select id="entry-destination"></select></label>
+<fieldset id="entry-new" class="entry-fields">
+<label>Programa <select id="entry-program" required></select></label>
+<label>Periodo <input id="entry-period" placeholder="Ej. 2027-I" maxlength="30" required></label>
+<label>Director o responsable <input id="entry-director" maxlength="150" required></label>
+</fieldset>
+<div class="entry-fields">
+<label>Profesor <input id="entry-teacher" maxlength="150" required></label>
+<label>Curso o actividad <input id="entry-course" maxlength="150" required></label>
+<label>Créditos del curso <input id="entry-credits" type="number" min="0" step="0.01" value="0" required></label>
+<label>Porcentaje del curso <input id="entry-pct" type="number" min="0.01" max="100" step="0.01" value="100" required></label>
+<label>Trabajos de grado <input id="entry-works" type="number" min="0" step="1" value="0" required></label>
+<label>Gestión administrativa h/semana <input id="entry-administration" type="number" min="0" step="0.01" value="0" required></label>
+<label>Investigación h/semana <input id="entry-research" type="number" min="0" step="0.01" value="0" required></label>
+</div>
+<p id="entry-result" class="entry-result" aria-live="polite"></p>
+<p id="entry-error" class="entry-error" role="alert"></p>
+<div class="entry-actions"><button id="entry-cancel" type="button">Cancelar</button><button class="primary" type="submit">Guardar fila</button></div>
+</form>
+</dialog>
 <script src="../catalog.js?v=20261104-3"></script>
 <script src="../thesis-rules.js?v=20261104-3"></script>
 <script src="../model.js?v=20261104-3"></script>
-<script src="faculty.js"></script>
+<script src="faculty.js?v=20261105-2"></script>
 </body>
 </html>

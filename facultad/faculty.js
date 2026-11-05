@@ -155,8 +155,7 @@ const alert = teacher => teacher.exact > 40 ? 'Exceso decimal de ' + fmt(teacher
   : teacher.weekly > 40 ? 'Sobre 40 h solo con superior' : 'Dentro del límite';
 const empty = (columns, message) => `<tr><td colspan="${columns}" class="faculty-empty">${message}</td></tr>`;
 
-function render() {
-  const previous = $('period').value;
+function render(previous = $('period').value) {
   const periods = [...new Set([...records.values()].map(record => record.period))]
     .sort((a,b) => b.localeCompare(a,'es',{numeric:true}));
   $('period').innerHTML = periods.length ? periods.map(period =>
@@ -180,7 +179,7 @@ function render() {
     return `<tr><td>${escapeHtml(record.program)}${peers > 1 ? '<br><span class="excess">Varios registros del programa</span>' : ''}</td>
     <td>${escapeHtml(record.director)}</td><td>${escapeHtml(record.id)}</td><td>${rows.length} / ${record.rows.length}</td>
     <td>${fmt(sum(rows,'exact'))}</td><td>${fmt(sum(rows,'weekly'))}</td>
-    <td><button data-view="${index}">Ver filas</button> <button data-remove="${index}">Retirar</button></td></tr>`;
+    <td><button data-add="${index}">Agregar fila</button> <button data-view="${index}">Ver filas</button> <button data-remove="${index}">Retirar</button></td></tr>`;
   }).join('') || empty(7,'Carga los archivos de los programas para empezar.');
   $('summary').innerHTML = summary.map(teacher => `<tr><td>${escapeHtml(teacher.teacher)}</td>
     <td>${teacher.programs.map(escapeHtml).join('<br>')}</td><td>${fmt(teacher.exact)}</td><td>${fmt(teacher.weekly)}</td>
@@ -239,7 +238,9 @@ $('records').onclick = event => {
   const button = event.target.closest('button');
   if (!button) return;
   const selected = selectedRecords();
-  if (button.dataset.view !== undefined) {
+  if (button.dataset.add !== undefined) {
+    openEntry(selected[Number(button.dataset.add)]);
+  } else if (button.dataset.view !== undefined) {
     const record = selected[Number(button.dataset.view)];
     const key = recordKey(record);
     detailId = detailId === key ? '' : key;
@@ -251,6 +252,81 @@ $('records').onclick = event => {
     const message = save();
     $('status').textContent = ['Registro retirado del consolidado.', message].filter(Boolean).join('\n');
     render();
+  }
+};
+
+$('entry-program').innerHTML = '<option value="">Selecciona el programa</option>' +
+  Object.entries(PROGRAM_CATALOG).map(([group, names]) =>
+    `<optgroup label="${escapeHtml(group)}">${names.map(name => `<option>${escapeHtml(name)}</option>`).join('')}</optgroup>`).join('');
+
+function openEntry(record) {
+  $('entry-form').reset();
+  const selected = selectedRecords();
+  $('entry-destination').innerHTML = '<option value="">Nuevo registro</option>' +
+    selected.map(item =>
+      `<option value="${escapeHtml(recordKey(item))}">${escapeHtml(item.program)} · ${escapeHtml(item.director)} · ${escapeHtml(item.id)}</option>`).join('');
+  $('entry-destination').value = record ? recordKey(record) : '';
+  $('entry-period').value = $('period').value;
+  $('entry-error').textContent = '';
+  updateEntry();
+  $('entry-dialog').showModal();
+}
+
+function entryRecord() {
+  return records.get($('entry-destination').value);
+}
+
+function entryRow() {
+  return {teacher: text($('entry-teacher').value), course: text($('entry-course').value),
+    ...Object.fromEntries(model.numeric.map(field => {
+      const value = $('entry-' + field).value;
+      return [field, value === '' ? null : Number(value)];
+    }))};
+}
+
+function updateEntry() {
+  const record = entryRecord();
+  $('entry-new').hidden = $('entry-new').disabled = !!record;
+  const program = record?.program || $('entry-program').value;
+  const row = entryRow();
+  const rule = ThesisRules.forProgram(program);
+  const result = rule && !model.error(row) ? model.calculate(row, program) : null;
+  $('entry-result').textContent = rule
+    ? `Dirección de grado · ${rule.hours} h por trabajo y periodo.` +
+      (result ? ` Total semanal · ${fmt(result.exact)} h decimal y ${fmt(result.weekly)} h superior.` : '')
+    : 'Selecciona un programa para aplicar las horas de dirección de grado.';
+}
+
+$('add-row').onclick = () => openEntry(selectedRecords()[0]);
+$('entry-cancel').onclick = () => $('entry-dialog').close();
+$('entry-form').oninput = updateEntry;
+$('entry-destination').onchange = updateEntry;
+$('entry-form').onsubmit = event => {
+  event.preventDefault();
+  const existing = entryRecord();
+  if ($('entry-destination').value && !existing) {
+    $('entry-error').textContent = 'El registro de destino ya no está disponible.';
+    return;
+  }
+  const row = entryRow();
+  const issue = model.error(row);
+  if (issue) { $('entry-error').textContent = issue; return; }
+  try {
+    const record = existing || {
+      schema:'concilia-director-1', id:'REG-' + crypto.randomUUID(),
+      program:$('entry-program').value, period:$('entry-period').value,
+      director:$('entry-director').value, rows:[]
+    };
+    const updated = validateRecord({...record, rows:[...record.rows, {...row, id:crypto.randomUUID()}]});
+    const key = recordKey(updated);
+    records.set(key, updated);
+    const message = save();
+    detailId = key;
+    $('entry-dialog').close();
+    $('status').textContent = ['Fila agregada a ' + updated.program + '.', message].filter(Boolean).join('\n');
+    render(updated.period);
+  } catch (error) {
+    $('entry-error').textContent = error.message;
   }
 };
 
