@@ -194,18 +194,61 @@ function render(previous = $('period').value) {
   $('detail').innerHTML = detail ? renderDetail(detail) : '';
 }
 
+const detailFields = [
+  ['teacher','Profesor'], ['course','Curso o actividad'], ['credits','Créditos'],
+  ['pct','Porcentaje del curso'], ['works','Trabajos de grado'],
+  ['administration','Gestión h/semana'], ['research','Investigación h/semana']
+];
+
 function renderDetail(record) {
   const body = record.rows.map(row => {
     const error = model.error(row);
     const result = error ? null : model.calculate(row, record.program);
-    return `<tr><td>${escapeHtml(row.teacher)}</td><td>${escapeHtml(row.course)}</td>
+    const fields = detailFields.map(([field, label]) => `<td><input class="detail-input"
+      data-edit-row="${escapeHtml(row.id)}" data-edit-field="${field}"
+      aria-label="${escapeHtml(label + ' · ' + (row.course || 'Fila sin curso'))}"
+      ${model.numeric.includes(field) ? 'type="number" step="any"' : 'type="text" maxlength="150"'}
+      value="${escapeHtml(row[field])}"></td>`).join('');
+    return `<tr>${fields}
       <td>${result ? fmt(result.exact) : '—'}</td><td>${result ? fmt(result.weekly) : '—'}</td>
       <td>${escapeHtml(error || model.distribution(row,record.rows))}</td></tr>`;
   }).join('');
   return `<details open class="faculty-detail"><summary>${escapeHtml(record.program)} · ${escapeHtml(record.id)}</summary>
-    <div class="summary-wrap"><table><thead><tr><th>Profesor</th><th>Curso o actividad</th><th>Decimal h/semana</th><th>Superior h/semana</th><th>Revisión</th></tr></thead>
-    <tbody>${body || empty(5,'El registro está vacío.')}</tbody></table></div></details>`;
+    ${body ? '<p>Edita las celdas y pulsa Guardar cambios para aplicar todas las correcciones de este registro.</p><button type="button" class="primary" id="save-detail">Guardar cambios</button><p id="detail-feedback" role="status"></p>' : ''}
+    <div class="summary-wrap"><table class="editable-detail"><thead><tr>${detailFields.map(([,label])=>`<th>${label}</th>`).join('')}
+    <th>Decimal h/semana</th><th>Superior h/semana</th><th>Revisión</th></tr></thead>
+    <tbody>${body || empty(10,'El registro está vacío.')}</tbody></table></div></details>`;
 }
+
+function saveDetail() {
+  const record = records.get(detailId);
+  if (!record) return;
+  const edits = new Map();
+  for (const input of $('detail').querySelectorAll('[data-edit-field]')) {
+    if (input.value === input.defaultValue) continue;
+    const {editRow:id, editField:field} = input.dataset;
+    if (!edits.has(id)) edits.set(id, {});
+    edits.get(id)[field] = model.numeric.includes(field)
+      ? (input.value === '' ? null : Number(input.value))
+      : text(input.value);
+  }
+  if (!edits.size) { $('detail-feedback').textContent = 'No hay cambios para guardar.'; return; }
+  const rows = record.rows.map(row => edits.has(row.id) ? {...row, ...edits.get(row.id)} : row);
+  const invalid = rows.findIndex(row => edits.has(row.id) && model.error(row));
+  if (invalid >= 0) {
+    $('detail-feedback').textContent = `Fila ${invalid + 1}. ${model.error(rows[invalid])}`;
+    return;
+  }
+  records.set(detailId, {...record, rows});
+  const storageMessage = save();
+  render(record.period);
+  const message = 'Cambios aplicados a ' + edits.size + (edits.size === 1 ? ' fila.' : ' filas.');
+  $('detail-feedback').textContent = [message, storageMessage].filter(Boolean).join(' ');
+}
+
+$('detail').onclick = event => {
+  if (event.target.id === 'save-detail') saveDetail();
+};
 
 $('import').onclick = async () => {
   const files = [...$('files').files];
