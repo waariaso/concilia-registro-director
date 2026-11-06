@@ -163,6 +163,7 @@ function render(previous = $('period').value) {
   if (periods.includes(previous)) $('period').value = previous;
   const selected = selectedRecords();
   const {summary, totals} = calculatePeriod(selected);
+  renderDashboard(reportData(selected));
   const invalid = selected.reduce((count, record) => count + record.rows.length - totals.get(recordKey(record)).length, 0);
   const stats = [
     ['Programas', new Set(selected.map(record => record.program)).size, selected.length + ' registros cargados'],
@@ -340,6 +341,11 @@ function download(data, filename, type) {
 }
 
 const periodFilename = () => $('period').value.replace(/[^a-zA-Z0-9-]/g, '-');
+$('excel').onclick = () => {
+  const report = reportData(selectedRecords());
+  download(facultyWorkbook(reportSheets(report, $('period').value)), 'Nomina-facultad-' + periodFilename() + '.xlsx',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+};
 $('summary-csv').onclick = () => {
   const {summary} = calculatePeriod(selectedRecords());
   const data = [['Periodo','Profesor','Programas','Clase h/semana','Preparación h/semana','Trabajos h/semana','Gestión h/semana','Investigación h/semana','Decimal h/semana','Superior h/semana','Decimal h/semestre','Superior h/semestre','Control de 40 horas'],
